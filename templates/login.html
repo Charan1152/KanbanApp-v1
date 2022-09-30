@@ -125,16 +125,21 @@
                           </div>
                         </div>
                         <!-- Modal -->
-                        <div class="modal fade" id="exampleModalc" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true"><!--New Card-->
+                        <div class="modal fade" id="exampleModalc{{i.list_id}}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true"><!--New Card-->
                           <div class="modal-dialog modal-dialog-centered">
                             <div class="modal-content">
                               <div class="modal-header">
-                                <h5 class="modal-title" id="exampleModalLabel">New List</h5>
+                                <h5 class="modal-title" id="exampleModalLabel">New Card</h5>
                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                               </div>
                               <div class="modal-body">
-                                <form method="post" action="/{{user}}/board/createCard">
-                                  <strong>Card Title: </strong><br>&emsp13;<input name="cardtitle" style="padding:4px ;" type="text" required><br>
+                                <form method="post" action="/{{user}}/board/createCard/{{i.list_id}}">
+                                  <b>Card Title:</b><br><input name="cardtitle" style="padding:4px ;" type="text" required><br>
+                                  <b>Card Content:</b><br>
+                                  <textarea name="cardcontent" style="padding:4px ;" rows="3" cols="40" required></textarea><br>
+                                  <b>Deadline:</b><br>
+                                  <input type="date" name="deadlinedt" required><br>
+
                               </div>
                               <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -161,9 +166,7 @@
                         </ul>
                       </div>
                     </div>
-
-                    {% set x = range(1,5)|random %}
-                    {% for y in range(x) %}
+                    
                     <div class="card border-dark mb-3" style="max-width: 18rem;">
                       <div class="card-header">Header</div>
                       <div class="card-body text-dark">
@@ -171,13 +174,13 @@
                         <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
                       </div>
                     </div>
-                    {% endfor %}
-                    <a class="nav-link active" aria-current="page" href="/{{user}}/board/createCard" data-bs-toggle="modal" data-bs-target="#exampleModalc"><i class="bi bi-file-plus d-flex justify-content-center mx-auto"></i><strong style="color:blue ;">New Card</strong></a>
+                    
+                    <a class="nav-link active" aria-current="page" href="/{{user}}/board/createCard/{{i.list_id}}" data-bs-toggle="modal" data-bs-target="#exampleModalc{{i.list_id}}"><!--i class="bi bi-file-plus d-flex justify-content-center mx-auto"></i--><!--strong style="color:blue ;"--><i class="bi bi-plus-circle e-plus d-flex justify-content-center mx-auto" style="color:blue ;"></i>New Card<!--/strong--></a>
                     <!--div class="card-footer">
                       <small class="text-muted">Last updated 3 mins ago</small>
                     </div-->
                 </div>
-                
+
           </div>
   
         {% endfor %}
