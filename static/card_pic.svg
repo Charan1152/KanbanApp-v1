@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="1920"
+   height="1080"
+   viewBox="0 0 508 285.75"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.2.1 (9c6d41e, 2022-07-14)"
+   sodipodi:docname="board_back.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="0.5297696"
+     inkscape:cx="1121.2421"
+     inkscape:cy="534.19449"
+     inkscape:window-width="1920"
+     inkscape:window-height="1016"
+     inkscape:window-x="0"
+     inkscape:window-y="27"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2">
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient1813">
+      <stop
+         style="stop-color:#c01c28;stop-opacity:1;"
+         offset="0"
+         id="stop1809" />
+      <stop
+         style="stop-color:#ffbe6f;stop-opacity:1"
+         offset="1"
+         id="stop1811" />
+    </linearGradient>
+    <radialGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient1813"
+       id="radialGradient1815"
+       cx="293.5882"
+       cy="157.59563"
+       fx="293.5882"
+       fy="157.59563"
+       r="253.96063"
+       gradientTransform="matrix(0.56821669,-0.94359951,1.442536,0.86866627,-77.020382,330.41488)"
+       gradientUnits="userSpaceOnUse" />
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="fill:url(#radialGradient1815);fill-opacity:1;stroke-width:0.264973;paint-order:stroke markers fill"
+       id="rect222"
+       width="509.41956"
+       height="286.67334"
+       x="-0.99886197"
+       y="-0.49943092"
+       ry="0" />
+  </g>
+</svg>

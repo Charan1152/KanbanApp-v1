@@ -1,0 +1,22 @@
+Table name,column names,dtype,size,Null?,Constraint,Accepted values,defaultvalues,Notes
+users,user_id,integer,-,no,"pk,ai",int,ai,
+users,user_name,text,20,No,unique,,,
+users,password,text,20,no,-,,,
+users,email,text,30,no,unique,,,
+users,isactive,text,1,no,,Y/N,Y,
+,,,,,,,,
+lists,list_id,integer,-,No,"pk,ai",int,ai,
+lists,user_id,integer,-,No,Fk,user.user_id,,
+lists,list_name,text,30,no,-,,,combination of user_id and list_name is unique
+lists,isactive,text,1,no,,Y/N,Y,
+,,,,,,,,
+cards,card_id,integer,-,No,"pk,ai",,ai,
+cards,list_id,integer,-,no,Fk,list.list_id,,
+cards,card_title,text,20,no,,,,"combo(cards(card_title,card_content,card_deadline)) = unique"
+cards,card_content,text,50,no,,,,"combo(cards(card_title,card_content,card_deadline)) = unique"
+cards,deadline_dt,datetime,-,no,,,,"combo(cards(card_title,card_content,card_deadline)) = unique"
+cards,iscomplete,text,1,no,,Y/N,,
+cards,isactive,text,1,no,,Y/N,,
+cards,completed_dt,datetime,-,yes,,,,
+cards,created_dt,datetime,-,no,,,,
+cards,last_updated_dt,datetime,-,no,,,created_dt,
