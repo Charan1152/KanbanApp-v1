@@ -181,5 +181,17 @@ def createCard(username,listid):
         db.session.add(card)
         db.session.commit()
         return redirect(url_for('loginsuccess',username=username))
+
+@app.route('/<username>/board/markAsComplete/<cardid>',methods=['GET','POST'])
+def markAsComplete(username,cardid):
+        card = Cards.query.filter_by(card_id=cardid).first()
+        card.iscomplete=1
+        db.session.commit()
+        return redirect(url_for('loginsuccess',username=username))
+
+@app.route('/<username>/board/deleteCard/<cardid>',methods=['GET','POST'])
+def deleteCard(username,cardid):
+    card = Cards.query.filter_by()
+
 if __name__=='__main__':
     app.run(debug=True,host='0.0.0.0') 

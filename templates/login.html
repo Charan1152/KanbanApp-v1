@@ -167,7 +167,21 @@
                     </div>
                     {% for y in dic[i] %}
                     <div class="card border-dark mb-3" style="max-width: 18rem;">
-                      <div class="card-header">{{y.card_title}}</div>
+                      {% if y.iscomplete==0 %}
+                      <div class="card-header"><strong><label style="color:orange ;background-color: black; border-radius: 2px;user-select:none ;">&emsp13;{{y.card_title}}&emsp13;</label></strong>&emsp13;
+                      {% else %}
+                      <div class="card-header"><strong><label style="color:green ;background-color: black; border-radius: 2px;"">&emsp13;{{y.card_title}}&emsp13;</label></strong>&emsp13;
+                      {% endif %}
+                        <i class="dropdown  bi bi-three-dots" role="button" data-bs-toggle="dropdown" aria-expanded="false"></i>
+                          <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#">Change Title</a></li>
+                            <li><a class="dropdown-item" href="#">Change Content</a></li>
+                            {% if y.iscomplete==0 %}
+                            <li><a class="dropdown-item" href="/{{user}}/board/markAsComplete/{{y.card_id}}">Mark as Complete</a></li>
+                            {% endif %}
+                            <li><a class="dropdown-item" href="#">Delete</a></li>
+                          </ul>
+                      </div>
                       <div class="card-body text-dark">
                         <!--h5 class="card-title">Dark card title</h5-->
                         <p class="card-text">{{y.card_content}}</p>
