@@ -83,7 +83,7 @@
                 <div class="col"></div>
                 <div class="col"></div>
                 <div class="col"></div>
-                {% for i in lists%}
+                {% for i in dic%}
                        <!-- Modal -->
                         <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true"><!--New List-->
                           <div class="modal-dialog modal-dialog-centered">
@@ -139,7 +139,6 @@
                                   <textarea name="cardcontent" style="padding:4px ;" rows="3" cols="40" required></textarea><br>
                                   <b>Deadline:</b><br>
                                   <input type="date" name="deadlinedt" required><br>
-
                               </div>
                               <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -166,15 +165,15 @@
                         </ul>
                       </div>
                     </div>
-                    
+                    {% for y in dic[i] %}
                     <div class="card border-dark mb-3" style="max-width: 18rem;">
-                      <div class="card-header">Header</div>
+                      <div class="card-header">{{y.card_title}}</div>
                       <div class="card-body text-dark">
-                        <h5 class="card-title">Dark card title</h5>
-                        <p class="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
+                        <!--h5 class="card-title">Dark card title</h5-->
+                        <p class="card-text">{{y.card_content}}</p>
                       </div>
                     </div>
-                    
+                    {% endfor %}
                     <a class="nav-link active" aria-current="page" href="/{{user}}/board/createCard/{{i.list_id}}" data-bs-toggle="modal" data-bs-target="#exampleModalc{{i.list_id}}"><!--i class="bi bi-file-plus d-flex justify-content-center mx-auto"></i--><!--strong style="color:blue ;"--><i class="bi bi-plus-circle e-plus d-flex justify-content-center mx-auto" style="color:blue ;"></i>New Card<!--/strong--></a>
                     <!--div class="card-footer">
                       <small class="text-muted">Last updated 3 mins ago</small>

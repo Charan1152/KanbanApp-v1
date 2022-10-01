@@ -1,3 +1,4 @@
+from crypt import methods
 import os
 from sqlite3 import Date
 from flask import Flask,flash
@@ -64,7 +65,7 @@ class Cards(db.Model):
     isactive = Column(Boolean,nullable=False)
     completed_dt = Column(DateTime,nullable=True)
     created_dt  = Column(DateTime,nullable=False)
-    last_updated_dt  = Column(DateTime,nullable=False,default=created_dt)
+    last_updated_dt  = Column(DateTime,nullable=False)
    
 class ActiveLists(object):
     @staticmethod
@@ -84,8 +85,11 @@ ul=[]
 @app.route("/<username>/board/")
 def loginsuccess(username):
     lists = ActiveLists.get_active_lists(username)
+    d={}
+    for i in lists:
+        d[i] = i.cards
     #lists = Lists.query.filter_by((Lists.uid=userrow.user_id) & (Lists.isactive=1)).all()
-    return render_template('login.html',user = username,lists=lists,length_lists=len(lists))
+    return render_template('login.html',user = username,lists=lists,length_lists=len(lists),dic=d)
     
 
 @app.route("/",methods=['GET','POST'])
@@ -143,8 +147,6 @@ def forgotCredentials():
 
 @app.route('/<username>/board/createList', methods=['GET','POST'])
 def createList(username):
-    if request.method == 'GET':
-        return render_template('createList.html',user = username)
     if request.method == 'POST':
         list_name = request.form.get("listname")
         user = Users.query.filter_by(username=username).first()
@@ -171,5 +173,13 @@ def deleteList(username,listid):
             db.session.commit()
     return redirect(url_for('loginsuccess',username=username))
 
+@app.route('/<username>/board/createCard/<listid>',methods=['GET','POST'])
+def createCard(username,listid):
+    if request.method == 'POST':
+        x = list(map(int,request.form.get("deadlinedt").split("-")))
+        card = Cards(list_id=int(listid),card_title=request.form.get("cardtitle"),card_content=request.form.get("cardcontent"),deadline_dt=datetime(x[0],x[1],x[2]),iscomplete=0,isactive=1,created_dt=datetime.now(),last_updated_dt=datetime.now())
+        db.session.add(card)
+        db.session.commit()
+        return redirect(url_for('loginsuccess',username=username))
 if __name__=='__main__':
     app.run(debug=True,host='0.0.0.0') 
