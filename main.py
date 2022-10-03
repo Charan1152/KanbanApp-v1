@@ -74,6 +74,11 @@ class ActiveLists(object):
         lists = Lists.query.filter((Lists.uid == userid) & (Lists.isactive==1)).all()
         return lists
 
+class ActiveCards(object):
+    @staticmethod
+    def get_active_cards(list_id):
+        cards = Cards.query.filter((Cards.list_id == list_id) & (Cards.isactive==1)).all()
+        return cards
 
 db.create_all()
 
@@ -87,7 +92,7 @@ def loginsuccess(username):
     lists = ActiveLists.get_active_lists(username)
     d={}
     for i in lists:
-        d[i] = i.cards
+        d[i] = ActiveCards.get_active_cards(i.list_id)
     #lists = Lists.query.filter_by((Lists.uid=userrow.user_id) & (Lists.isactive=1)).all()
     return render_template('login.html',user = username,lists=lists,length_lists=len(lists),dic=d)
     
@@ -186,12 +191,32 @@ def createCard(username,listid):
 def markAsComplete(username,cardid):
         card = Cards.query.filter_by(card_id=cardid).first()
         card.iscomplete=1
+        card.last_updated_dt=datetime.now()
         db.session.commit()
         return redirect(url_for('loginsuccess',username=username))
 
 @app.route('/<username>/board/deleteCard/<cardid>',methods=['GET','POST'])
 def deleteCard(username,cardid):
-    card = Cards.query.filter_by()
+    card = Cards.query.filter_by(card_id=cardid).first()
+    card.isactive=0
+    db.session.commit()
+    return redirect(url_for('loginsuccess',username=username))
+
+@app.route('/<username>/board/markAsIncomplete/<cardid>',methods=['GET','POST'])
+def markAsIncomplete(username,cardid):
+        card = Cards.query.filter_by(card_id=cardid).first()
+        card.iscomplete=0
+        card.last_updated_dt=datetime.now()
+        db.session.commit()
+        return redirect(url_for('loginsuccess',username=username))
+
+@app.route('/<username>/board/renameCard/<cardid>',methods=['GET','POST'])
+def renameCard(username,cardid):
+    card = Cards.query.filter_by(card_id=cardid).first()
+    card.card_title = request.form.get('newcardname')
+    card.last_updated_dt=datetime.now()
+    db.session.commit()
+    return redirect(url_for('loginsuccess',username=username))
 
 if __name__=='__main__':
     app.run(debug=True,host='0.0.0.0') 

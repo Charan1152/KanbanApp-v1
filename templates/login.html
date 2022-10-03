@@ -148,6 +148,8 @@
                             </div>
                           </div>
                         </div>
+
+                        
                 <div class="col">
                   <div class="card" style="border: 2px solid whitesmoke;">
                     <img src="{{url_for('static',filename='card_pic.png')}}" class="card-img-top" alt="...">
@@ -166,6 +168,26 @@
                       </div>
                     </div>
                     {% for y in dic[i] %}
+                    <!-- Modal -->
+                    <div class="modal fade" id="exampleModalctrn{{y.card_id}}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true"><!--Change Card Title-->
+                      <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                          <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">Card Name Update</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                          </div>
+                          <div class="modal-body">
+                            <form method="post" action="/{{user}}/board/renameCard/{{y.card_id}}">
+                              <strong>New Name: </strong>&emsp13;<input name="newcardname" style="padding:4px ;" type="text" required><br>
+                          </div>
+                          <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary">Rename</button>
+                          </form>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                     <div class="card border-dark mb-3" style="max-width: 18rem;">
                       {% if y.iscomplete==0 %}
                       <div class="card-header"><strong><label style="color:orange ;background-color: black; border-radius: 2px;user-select:none ;">&emsp13;{{y.card_title}}&emsp13;</label></strong>&emsp13;
@@ -174,12 +196,15 @@
                       {% endif %}
                         <i class="dropdown  bi bi-three-dots" role="button" data-bs-toggle="dropdown" aria-expanded="false"></i>
                           <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#exampleModalctrn{{y.card_id}}" style="cursor:pointer ;" id="{{y.card_id}}">Change Title</a></li>
                             <li><a class="dropdown-item" href="#">Change Title</a></li>
                             <li><a class="dropdown-item" href="#">Change Content</a></li>
                             {% if y.iscomplete==0 %}
                             <li><a class="dropdown-item" href="/{{user}}/board/markAsComplete/{{y.card_id}}">Mark as Complete</a></li>
+                            {% else %}
+                            <li><a class="dropdown-item" href="/{{user}}/board/markAsIncomplete/{{y.card_id}}">Mark as Incomplete</a></li>
                             {% endif %}
-                            <li><a class="dropdown-item" href="#">Delete</a></li>
+                            <li><a class="dropdown-item" href="/{{user}}/board/deleteCard/{{y.card_id}}">Delete</a></li>
                           </ul>
                       </div>
                       <div class="card-body text-dark">
@@ -188,6 +213,7 @@
                       </div>
                     </div>
                     {% endfor %}
+                    <hr>
                     <a class="nav-link active" aria-current="page" href="/{{user}}/board/createCard/{{i.list_id}}" data-bs-toggle="modal" data-bs-target="#exampleModalc{{i.list_id}}"><!--i class="bi bi-file-plus d-flex justify-content-center mx-auto"></i--><!--strong style="color:blue ;"--><i class="bi bi-plus-circle e-plus d-flex justify-content-center mx-auto" style="color:blue ;"></i>New Card<!--/strong--></a>
                     <!--div class="card-footer">
                       <small class="text-muted">Last updated 3 mins ago</small>
