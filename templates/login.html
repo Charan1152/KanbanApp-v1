@@ -68,6 +68,26 @@
         <br><br>
 
         {% if length_lists==0 %}
+        <!-- Modal -->
+        <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true"><!--New List-->
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLabel">New List</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <form method="post" action="/{{user}}/board/createList">
+                  <strong>List Name: </strong><br>&emsp13;<input name="listname" style="padding:4px ;" type="text" required><br>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="submit" class="btn btn-primary">Create</button>
+              </form>
+              </div>
+            </div>
+          </div>
+        </div>
           <h3 style="color:white;padding: 200px;cursor: pointer;"><a class="nav-link active" aria-current="page" data-bs-toggle="modal" data-bs-target="#exampleModal" style="cursor: pointer;"><i class="bi bi-file-plus d-flex justify-content-center mx-auto" ></i><strong style="font-family: Montserrat;">&emsp13;&emsp13;&emsp13;&emsp13;&emsp13;&emsp13;&emsp13;&emsp13;&emsp13;&emsp13;&emsp13;&emsp13;&emsp13;&emsp13;&emsp13;&emsp13;&emsp13;&emsp13;&emsp13;&emsp13;&emsp13;&emsp13;&emsp13;&emsp13;&emsp13;&emsp13;&emsp13;&emsp13;&emsp13;&emsp13;&emsp13;&emsp13;&emsp13;No Lists to display, Add a List Now!!</strong></h3></a>
           {% else %}
         <div class="container-fluid text-center" >
