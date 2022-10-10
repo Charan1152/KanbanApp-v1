@@ -81,11 +81,6 @@ class ActiveCards(object):
 
 db.create_all()
 
-global ul
-ul=[]
-
-
-
 @app.route("/<username>/board/")
 def loginsuccess(username):
     lists = ActiveLists.get_active_lists(username)
