@@ -212,5 +212,13 @@ def renameCard(username,cardid):
     db.session.commit()
     return redirect(url_for('loginsuccess',username=username))
 
+@app.route('/<username>/board/changeCardContent/<cardid>',methods=['GET','POST'])
+def changeCardContent(username,cardid):
+    card = Cards.query.filter_by(card_id=cardid).first()
+    card.card_content = request.form.get('newcardcontent')
+    card.last_updated_dt = datetime.now()
+    db.session.commit()
+    return redirect(url_for('loginsuccess',username=username))    
+
 if __name__=='__main__':
     app.run(debug=True,host='0.0.0.0') 
