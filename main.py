@@ -7,14 +7,14 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from random import randint
 import smtplib
-server = smtplib.SMTP('smtp.gmail.com',587)
+# server = smtplib.SMTP('smtp.gmail.com',587)
 
-server.starttls()
+# server.starttls()
 
-server.login('kanbaniitm@gmail.com','tsslafciqjfvffgz')
+# server.login('kanbaniitm@gmail.com','tsslafciqjfvffgz')
 
-server.sendmail('kanbaniitm@gmail.com','rajithaindraganti@gmail.com','<b>Mail From Python!!</b>')
-#print("mailsent")
+# server.sendmail('kanbaniitm@gmail.com','saicharankmrs@gmail.com','<b>Mail From Python!!</b>')
+# #print("mailsent")
 
 current_dir = os.path.abspath(os.path.dirname(__file__))
 
