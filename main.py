@@ -7,6 +7,7 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from random import randint
 import smtplib
+import json
 # server = smtplib.SMTP('smtp.gmail.com',587)
 
 # server.starttls()
@@ -233,7 +234,22 @@ def transferCards(username,listid):
 
 @app.route('/<username>/summary')
 def summary(username):
-    return render_template('summary.html',user=username)
+    if request.method == 'GET':
+        user = Users.query.filter_by(username=username).first()
+        (labels, data1, data0) = ([], [], [])
+        for l in user.lists:
+            labels.append(l.listname)
+            temp1 = 0
+            temp0 = 0
+            for card in l.cards:
+                if card.iscomplete == 1:
+                    temp1 += 1
+                else:
+                    temp0 += 1
+            data1.append(temp1)
+            data0.append(temp0)
+        print(labels, data1, data0)
+        return render_template('summary.html', user = username, labels = json.dumps(labels), data1 = json.dumps(data1), data0 = json.dumps(data0) )        
 
 if __name__=='__main__':
     app.run(debug=True,host='0.0.0.0') 
