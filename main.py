@@ -220,5 +220,20 @@ def changeCardContent(username,cardid):
     db.session.commit()
     return redirect(url_for('loginsuccess',username=username))    
 
+@app.route('/<username>/board/transferCards/<listid>',methods=['GET','POST'])
+def transferCards(username,listid):
+    cards = ActiveCards.get_active_cards(listid)
+    tolist = request.form.getlist('totransfer')[0]
+    tlist_id = Lists.query.filter_by(listname=tolist).first().list_id
+    for card in cards:
+        card.list_id  = tlist_id
+        card.last_updated_dt=datetime.now()
+    db.session.commit()
+    return redirect(url_for('loginsuccess',username=username))    
+
+@app.route('/<username>/summary')
+def summary(username):
+    return render_template('summary.html',user=username)
+
 if __name__=='__main__':
     app.run(debug=True,host='0.0.0.0') 

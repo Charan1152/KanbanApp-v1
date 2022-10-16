@@ -55,7 +55,7 @@
                 <a class="nav-link active" aria-current="page" href="/{{user}}/board/createList" data-bs-toggle="modal" data-bs-target="#exampleModal"><i class="bi bi-file-plus d-flex justify-content-center mx-auto"></i><strong style="color:blue ;">New List</strong></a>
               </li>
               <li class="nav-item">
-                <a class="nav-link active" aria-current="page" href="/summary"><i class="bi bi-graph-up-arrow d-flex justify-content-center mx-auto"></i><strong style="color:blue ;">Summary</strong></a>
+                <a class="nav-link active" aria-current="page" href="/{{user}}/summary"><i class="bi bi-graph-up-arrow d-flex justify-content-center mx-auto"></i><strong style="color:blue ;">Summary</strong></a>
               </li>
               <li class="nav-item">
                 <a class="nav-link active" aria-current="page"><i class="bi bi-person-circle d-flex justify-content-center mx-auto"></i><strong style="color:mediumpurple ;">{{user}}</strong></a>
@@ -171,7 +171,29 @@
                             </div>
                           </div>
                         </div>
-
+                        <!-- Modal -->
+                        <div class="modal fade" id="exampleModalshift{{i.list_id}}" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true"><!--New Card-->
+                          <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                              <div class="modal-header">
+                                <h5 class="modal-title" id="exampleModalLabel">Transfer Cards</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                              </div>
+                              <div class="modal-body">
+                                <form method="post" action="/{{user}}/board/transferCards/{{i.list_id}}">
+                                 {% for x in dic %}
+                                 <div class="form-check">
+                                  <input class="form-check-input" type="radio" name="totransfer" id="{{x.listname}}" value="{{x.listname}}">
+                                  {{x.listname}}
+                                 </input>
+                                </div>
+                                {% endfor %}
+                                <button type="submit" class="btn btn-primary">Transfer</button>
+                              </form>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                         
                 <div class="col">
                   <div class="card" style="border: 2px solid whitesmoke;">
@@ -186,6 +208,9 @@
                         <hr>
                         <ul class="dropdown-menu dropdown-menu-dark">
                           <li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#exampleModal1{{i.list_id}}" style="cursor:pointer ;" id="{{i.list_id}}">Rename</a></li>
+                          {% if dic[i]!=[] %}
+                          <li><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#exampleModalshift{{i.list_id}}" style="cursor:pointer ;" id="{{i.list_id}}">Transfer Cards to Another List</a></li>
+                          {% endif %}
                           <li><a class="dropdown-item" href="#" id="{{i.list_id}}" onClick="reply_id(this.id)">Delete</a></li>
                         </ul>
                       </div>
