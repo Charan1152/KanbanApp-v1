@@ -80,8 +80,8 @@ class ListAPI(Resource):
         else:
             raise NotFoundError(status_code=404)
 
-api.add_resource(ListAPI, "/api/lists/<user_id>", "/api/createlist/<user_id>", "/api/deletelist/<list_id>", "/api/updatelist/<list_id>")
-api.add_resource(CardAPI, "/api/cards/<list_id>", "/api/createcard/<list_id>", "/api/deletecard/<card_id>", "/api/updatecard/<card_id>")
+api.add_resource(ListAPI, "/api/lists/<user_id>", "/api/createList/<user_id>", "/api/deleteList/<list_id>", "/api/updateList/<list_id>")
+api.add_resource(CardAPI, "/api/cards/<list_id>", "/api/createCard/<list_id>", "/api/deleteCard/<card_id>", "/api/updateCard/<card_id>")
 
 class Users(db.Model):
     __tablename__ = 'users'
