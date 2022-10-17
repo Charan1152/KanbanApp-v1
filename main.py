@@ -2,20 +2,12 @@ import os
 from sqlite3 import Date
 from flask import Flask,flash
 from flask import render_template
-from flask import request,url_for,redirect,session
+from flask import request,url_for,redirect,session,make_response
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
-from random import randint
-import smtplib
+import sendmail as sm
+from werkzeug.exceptions import HTTPException
 import json
-# server = smtplib.SMTP('smtp.gmail.com',587)
-
-# server.starttls()
-
-# server.login('kanbaniitm@gmail.com','tsslafciqjfvffgz')
-
-# server.sendmail('kanbaniitm@gmail.com','saicharankmrs@gmail.com','<b>Mail From Python!!</b>')
-# #print("mailsent")
 
 current_dir = os.path.abspath(os.path.dirname(__file__))
 
@@ -81,6 +73,16 @@ class ActiveCards(object):
         return cards
 
 db.create_all()
+
+
+class NotFoundError(HTTPException):
+    def __init__(self,statuscode):
+        self.response = make_response('',statuscode)
+
+class BusinessValidationError(HTTPException):
+    def __init__(self,statuscode, errorcode, errormessage):
+        message = {"Error Code": errorcode, "Message": errormessage}
+        self.response = make_response(json.dumps(message),statuscode)
 
 @app.route("/<username>/board/")
 def loginsuccess(username):
@@ -248,7 +250,7 @@ def summary(username):
                     temp0 += 1
             data1.append(temp1)
             data0.append(temp0)
-        print(labels, data1, data0)
+        #print(labels, data1, data0)
         return render_template('summary.html', user = username, labels = json.dumps(labels), data1 = json.dumps(data1), data0 = json.dumps(data0) )        
 
 if __name__=='__main__':
