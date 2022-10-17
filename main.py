@@ -185,6 +185,64 @@ class CardAPI(Resource):
         db.session.add(c)
         db.session.commit()
         return c, 201
+        
+    def delete(self, card_id):
+        card = Cards.query.get(card_id)
+        if card is None:
+            raise NotFoundError(status_code=404)
+        else:
+            card.isactive=0
+            db.session.commit()
+            return "Successfully Deleted"
+
+    @marshal_with(card_fields)
+    def put(self, card_id):
+        card = Cards.query.get(card_id)
+        if card is None:
+            raise NotFoundError(status_code=404)
+
+        args = card_parser.parse_args()
+        card_title = args.get('card_title', None)
+        card_content = args.get('card_content', None)
+        deadline_dt = datetime.strptime(args.get('deadline_dt', None),'%Y-%m-%d')
+        dummy = args.get('deadline_dt', None)
+        list_id = args.get('list_id', None)
+
+        if list_id is None:
+            raise BusinessValidationError(status_code=400, error_code='LIST003', error_message='List Id is required')
+
+        l = Lists.query.get(list_id)
+        if l is None:
+            raise NotFoundError(status_code=404)
+
+        if card_title is None:
+            raise BusinessValidationError(status_code=400, error_code='CARD001', error_message='Card Name is required')
+        
+        if deadline_dt is None:
+            raise BusinessValidationError(status_code=400, error_code='CARD002', error_message='Deadline is required')
+
+        today = datetime.today().strftime('%Y-%m-%d')
+        if dummy < today:
+            raise BusinessValidationError(status_code=400, error_code='CARD003', error_message='The Date must be bigger or Equal to today date')
+
+        flag = False
+        c = Cards.query.filter_by(card_title=card_title,list_id=list_id).first()
+        if card.list_id == list_id:
+            if card.card_title == card_title or c == None:
+                flag = True
+        elif c == None:
+            card.list_id = list_id
+            flag = True
+
+        if flag:
+            card.card_title = card_title
+            card.card_content = card_content
+            card.deadline_dt = deadline_dt
+            card.isactive = True
+            db.session.commit()
+            return card,200
+        else:
+            raise BusinessValidationError(status_code=400, error_code='CARD004', error_message='Card Name already exists in the given list')
 
 api.add_resource(ListAPI, "/api/lists/<user_id>", "/api/createList/<user_id>", "/api/deleteList/<list_id>", "/api/updateList/<list_id>")
 api.add_resource(CardAPI, "/api/cards/<list_id>", "/api/createCard/<list_id>", "/api/deleteCard/<card_id>", "/api/updateCard/<card_id>")
