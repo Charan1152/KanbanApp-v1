@@ -10,8 +10,8 @@
 - Go to shell and run
     `pip install --upgrade poetry`
 - Click on `main.py` and click button run
-- Sample project is at https://replit.com/@PVV1/Kanban-V1
-- The web app will be availabe at https://kanban-v1.pvv1.repl.co/
+- Sample project is at https://replit.com/@iitcharankruthiventi/Kanban-v1
+- The web app will be availabe at https://Kanban-v1.iitcharankruthiventi.repl.co
 - Format https://<replname>.<username>.repl.co
 
 # Folder Structure
