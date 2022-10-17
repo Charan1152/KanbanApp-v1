@@ -115,20 +115,36 @@ class ListAPI(Resource):
             raise NotFoundError(status_code=404)
 
         args = list_parser.parse_args()
-        name = args.get('name', None)
-        description = args.get('description', None)
+        listname = args.get('listname', None)
 
-        if name is None:
+        if listname is None:
             raise BusinessValidationError(status_code=400, error_code='LIST001', error_message='List Name is required')
 
-        new = Lists.query.filter_by(name=name,user_id=l.user_id).first()
-        if l.name == name or new == None:
-            l.name = name
-            l.description = description
+        new = Lists.query.filter_by(listname=listname,uid=l.uid).first()
+        if l.listname == listname or new == None:
+            l.listname = listname
             db.session.commit()
             return l,200
         else:
             raise BusinessValidationError(status_code=400, error_code='LIST002', error_message='List Name already exists')
+
+
+#CARD API
+card_fields = {
+    'card_id': fields.Integer,
+    'card_title': fields.String,
+    'card_content': fields.String,
+    'deadline_dt': fields.String,
+    'isactive': fields.String,
+    'list_id': fields.Integer
+}
+
+card_parser = reqparse.RequestParser()
+card_parser.add_argument('card_title')
+card_parser.add_argument('card_content')
+card_parser.add_argument('deadline_dt')
+card_parser.add_argument('isactive')
+card_parser.add_argument('list_id')
 
 class CardAPI(Resource):
     def get(self, list_id):
@@ -136,10 +152,39 @@ class CardAPI(Resource):
         if l:
             c = []
             for card in l.cards:
-                c.append(card.name)
+                c.append(card.card_title)
             return {'list_id': list_id, 'cards': c}
         else:
             raise NotFoundError(status_code=404)
+    
+    @marshal_with(card_fields)
+    def post(self, list_id):
+        args = card_parser.parse_args()
+        card_title = args.get('card_title', None)
+        card_content = args.get('card_content', None)
+        deadline_dt = datetime.strptime(args.get('deadline_dt', None),'%Y-%m-%d')
+        dummy = args.get('deadline_dt', None)
+        created_dt = datetime.now()
+        ludt = datetime.now()
+
+        if card_title is None:
+            raise BusinessValidationError(status_code=400, error_code='CARD001', error_message='Card Name is required')
+
+        if deadline_dt is None:
+            raise BusinessValidationError(status_code=400, error_code='CARD002', error_message='Deadline is required')
+
+        today = datetime.today().strftime('%Y-%m-%d')
+        if dummy < today:
+            raise BusinessValidationError(status_code=400, error_code='CARD003', error_message='Date must be bigger or Equal to today date')
+
+        card = Cards.query.filter_by(card_title=card_title,list_id=list_id).first()
+        if card is not None:
+            raise BusinessValidationError(status_code=400, error_code='CARD004', error_message='Card Name already exists in the given list')
+        
+        c = Cards(card_title=card_title, card_content=card_content, deadline_dt=deadline_dt, created_dt=created_dt ,list_id=list_id,last_updated_dt=ludt,iscomplete=False,completed_dt=None,isactive=True)
+        db.session.add(c)
+        db.session.commit()
+        return c, 201
 
 api.add_resource(ListAPI, "/api/lists/<user_id>", "/api/createList/<user_id>", "/api/deleteList/<list_id>", "/api/updateList/<list_id>")
 api.add_resource(CardAPI, "/api/cards/<list_id>", "/api/createCard/<list_id>", "/api/deleteCard/<card_id>", "/api/updateCard/<card_id>")

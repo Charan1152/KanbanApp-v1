@@ -391,7 +391,7 @@ paths:
                   example: card_content
                 deadline_dt:
                   type: string
-                  example: mm-dd-yyyy
+                  example: yyyy-mm-dd
       responses:
         '201':
           description: Card created successfully
@@ -411,7 +411,7 @@ paths:
                     example: card_content
                   deadline_dt:
                     type: string
-                    example: mm-dd-yyyy
+                    example: yyyy-mm-dd
                   isactive:
                     type: integer
                     example: 1
@@ -471,7 +471,7 @@ paths:
                   example: card_content
                 deadline_dt:
                   type: string
-                  example: mm-dd-yyyy
+                  example: yyyy-mm-dd
                 isactive:
                   type: integer
                   example: 1
@@ -497,7 +497,7 @@ paths:
                     example: card_content
                   deadline_dt:
                     type: string
-                    example: mm-dd-yyyy
+                    example: yyyy-mm-dd
                   isactive:
                     type: integer
                     example: 1             
