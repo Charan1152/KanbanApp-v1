@@ -4,7 +4,7 @@ from flask import Flask,flash
 from flask import render_template
 from flask import request,url_for,redirect,session,make_response
 from flask_sqlalchemy import SQLAlchemy
-from flask_restful import Resource,Api
+from flask_restful import Resource,Api,marshal_with,reqparse,fields
 from datetime import datetime
 import sendmail as sm
 from werkzeug.exceptions import HTTPException
@@ -58,6 +58,18 @@ app, api = create_app()
 #app.config['SESSION_TYPE'] = 'filesystem'
 #app.secret_key="kanbanforiitm"
 
+list_fields = {
+    'list_id': fields.Integer,
+    'listname': fields.String,
+    'user_id': fields.Integer,
+    'isactive' : fields.Boolean
+}
+
+list_parser = reqparse.RequestParser()
+list_parser.add_argument('listname')
+#list_parser.add_argument('description')
+
+
 class CardAPI(Resource):
     def get(self, list_id):
         l = Lists.query.get(list_id)
@@ -79,6 +91,7 @@ class ListAPI(Resource):
             return {'user_id': user_id, 'lists': l}
         else:
             raise NotFoundError(status_code=404)
+
 
 api.add_resource(ListAPI, "/api/lists/<user_id>", "/api/createList/<user_id>", "/api/deleteList/<list_id>", "/api/updateList/<list_id>")
 api.add_resource(CardAPI, "/api/cards/<list_id>", "/api/createCard/<list_id>", "/api/deleteCard/<card_id>", "/api/updateCard/<card_id>")
