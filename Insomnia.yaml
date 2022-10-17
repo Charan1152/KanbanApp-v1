@@ -240,7 +240,7 @@ paths:
             schema:
               type: object
               properties:
-                name:
+                listname:
                   type: string
                   example: listname
       responses:
@@ -251,13 +251,13 @@ paths:
               schema:
                 type: object
                 properties:
-                  id:
+                  list_id:
                     type: integer
                     example: 2
-                  name:
+                  listname:
                     type: string
                     example: list_name
-                  user_id:
+                  uid:
                     type: integer
                     example: 1
         '404':
@@ -305,7 +305,7 @@ paths:
             schema:
               type: object
               properties:
-                name:
+                listname:
                   type: string
                   example: listname
       responses:
@@ -383,15 +383,15 @@ paths:
             schema:
               type: object
               properties:
-                name:
+                card_title:
                   type: string
                   example: card_name
-                content:
+                card_content:
                   type: string
                   example: card_content
-                deadline:
+                deadline_dt:
                   type: string
-                  example: yyyy-mm-dd
+                  example: mm-dd-yyyy
       responses:
         '201':
           description: Card created successfully
@@ -403,18 +403,18 @@ paths:
                   id:
                     type: integer
                     example: 2
-                  name:
+                  card_title:
                     type: string
                     example: card_name
-                  content:
+                  card_content:
                     type: string
                     example: card_content
-                  deadline:
+                  deadline_dt:
                     type: string
-                    example: yyyy-mm-dd
-                  toggle:
-                    type: string
-                    example: '0'
+                    example: mm-dd-yyyy
+                  isactive:
+                    type: integer
+                    example: 1
                   list_id:
                     type: integer
                     example: 1
@@ -463,18 +463,18 @@ paths:
             schema:
               type: object
               properties:
-                name:
+                card_title:
                   type: string
                   example: card_name
-                content:
+                card_content:
                   type: string
                   example: card_content
-                deadline:
+                deadline_dt:
                   type: string
-                  example: yyyy-mm-dd
-                toggle:
-                  type: string
-                  example: "0"
+                  example: mm-dd-yyyy
+                isactive:
+                  type: integer
+                  example: 1
                 list_id:
                   type: integer
                   example: 1
@@ -486,21 +486,21 @@ paths:
               schema:
                 type: object
                 properties:
-                  id:
+                  card_id:
                     type: integer
                     example: 2
-                  name:
+                  card_title:
                     type: string
                     example: card_name
-                  content:
+                  card_content:
                     type: string
                     example: card_content
-                  deadline:
+                  deadline_dt:
                     type: string
-                    example: yyyy-mm-dd
-                  toggle:
-                    type: string
-                    example: "0"              
+                    example: mm-dd-yyyy
+                  isactive:
+                    type: integer
+                    example: 1             
                   list_id:
                     type: integer
                     example: 1

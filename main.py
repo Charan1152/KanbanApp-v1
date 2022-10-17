@@ -60,7 +60,7 @@ app, api = create_app()
 
 class CardAPI(Resource):
     def get(self, list_id):
-        l = List.query.get(list_id)
+        l = Lists.query.get(list_id)
         if l:
             c = []
             for card in l.cards:
