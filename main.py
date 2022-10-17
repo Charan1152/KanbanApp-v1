@@ -10,34 +10,22 @@ import sendmail as sm
 from werkzeug.exceptions import HTTPException
 import json
 
-current_dir = os.path.abspath(os.path.dirname(__file__))
-app = None
-api = None
 
-def create_app():
-    app = Flask(__name__, template_folder="templates")
-    app.secret_key = 'Secret Key'
-    if os.getenv('ENV', "development") == "production":
-      raise Exception("Currently no production config is setup.")
-    else:
-      print("Staring Local Development")
-      app.config.from_object(LocalDevelopmentConfig)
-    db.init_app(app)
-    api = Api(app)
-    app.app_context().push()
-    return app, api
+basedir = os.path.abspath(os.path.dirname(__file__))
 
-app, api = create_app()
+class Config():
+    DEBUG = False
+    SQLITE_DB_DIR = None
+    SQLALCHEMY_DATABASE_URI = None
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
 
-app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///"+"database.sqlite3"
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
-app.config['SESSION_TYPE'] = 'filesystem'
-app.secret_key="kanbanforiitm"
-app.config.update(SESSION_COOKIE_SAMESITE="None", SESSION_COOKIE_SECURE=True)
+class LocalDevelopmentConfig(Config):
+    SQLITE_DB_DIR = os.path.join(basedir)
+    SQLALCHEMY_DATABASE_URI = "sqlite:///" + os.path.join(SQLITE_DB_DIR, "database.sqlite3")
+    DEBUG = True
+
 
 db = SQLAlchemy()
-db.init_app(app)
-app.app_context().push()
 Column = db.Column
 Integer = db.Integer
 String = db.String
@@ -45,6 +33,55 @@ ForeignKey = db.ForeignKey
 Boolean = db.Boolean
 DateTime = db.DateTime
 
+current_dir = os.path.abspath(os.path.dirname(__file__))
+app = None
+api = None
+
+def create_app():
+    app = Flask(__name__, template_folder="templates")
+    app.secret_key = "kanbanforiitm"
+    if os.getenv('ENV', "development") == "production":
+      raise Exception("Currently no production config is setup.")
+    else:
+      print("Staring Local Development")
+      app.config.from_object(LocalDevelopmentConfig)
+    db.init_app(app)
+    app.config.update(SESSION_COOKIE_SAMESITE="None", SESSION_COOKIE_SECURE=True)
+    api = Api(app)
+    app.app_context().push()
+    return app, api
+
+app, api = create_app()
+
+#app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///"+"database.sqlite3"
+#app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
+#app.config['SESSION_TYPE'] = 'filesystem'
+#app.secret_key="kanbanforiitm"
+
+class CardAPI(Resource):
+    def get(self, list_id):
+        l = List.query.get(list_id)
+        if l:
+            c = []
+            for card in l.cards:
+                c.append(card.name)
+            return {'list_id': list_id, 'cards': c}
+        else:
+            raise NotFoundError(status_code=404)
+
+class ListAPI(Resource):
+    def get(self, user_id):
+        user = Users.query.get(user_id)
+        if user:
+            l = []
+            for lst in user.lists:
+                l.append(lst.name)
+            return {'user_id': user_id, 'lists': l}
+        else:
+            raise NotFoundError(status_code=404)
+
+api.add_resource(ListAPI, "/api/lists/<user_id>", "/api/createlist/<user_id>", "/api/deletelist/<list_id>", "/api/updatelist/<list_id>")
+api.add_resource(CardAPI, "/api/cards/<list_id>", "/api/createcard/<list_id>", "/api/deletecard/<card_id>", "/api/updatecard/<card_id>")
 
 class Users(db.Model):
     __tablename__ = 'users'
