@@ -61,7 +61,7 @@ app, api = create_app()
 list_fields = {
     'list_id': fields.Integer,
     'listname': fields.String,
-    'user_id': fields.Integer,
+    'uid': fields.Integer,
     'isactive' : fields.Boolean
 }
 
@@ -69,6 +69,66 @@ list_parser = reqparse.RequestParser()
 list_parser.add_argument('listname')
 #list_parser.add_argument('description')
 
+
+class ListAPI(Resource):
+    def get(self, user_id):
+        user = Users.query.get(user_id)
+        if user:
+            l = []
+            for lst in user.lists:
+                l.append(lst.listname)
+            return {'user_id': user_id, 'lists': l}
+        else:
+            raise NotFoundError(status_code=404)
+
+
+    @marshal_with(list_fields)
+    def post(self, user_id):
+        args = list_parser.parse_args()
+        listname = args.get('listname', None)
+        if listname is None:
+            raise BusinessValidationError(status_code=400, error_code='LIST001', error_message='List Name is required')
+
+        l = Lists.query.filter_by(listname=listname,uid=user_id).first()
+        if l is not None:
+            raise BusinessValidationError(status_code=400, error_code='LIST002', error_message='List Name already exists')
+        
+        l = Lists(listname=listname ,uid = user_id)
+        db.session.add(l)
+        db.session.commit()
+        return l, 201
+
+    def delete(self, list_id):
+        l = Lists.query.get(list_id)
+        if l is None:
+            raise NotFoundError(status_code=404)
+        else:
+            l.isactive=0
+            db.session.commit()
+            return "Successfully Deleted" 
+
+
+    @marshal_with(list_fields)
+    def put(self, list_id):
+        l = Lists.query.get(list_id)
+        if l is None:
+            raise NotFoundError(status_code=404)
+
+        args = list_parser.parse_args()
+        name = args.get('name', None)
+        description = args.get('description', None)
+
+        if name is None:
+            raise BusinessValidationError(status_code=400, error_code='LIST001', error_message='List Name is required')
+
+        new = Lists.query.filter_by(name=name,user_id=l.user_id).first()
+        if l.name == name or new == None:
+            l.name = name
+            l.description = description
+            db.session.commit()
+            return l,200
+        else:
+            raise BusinessValidationError(status_code=400, error_code='LIST002', error_message='List Name already exists')
 
 class CardAPI(Resource):
     def get(self, list_id):
@@ -80,18 +140,6 @@ class CardAPI(Resource):
             return {'list_id': list_id, 'cards': c}
         else:
             raise NotFoundError(status_code=404)
-
-class ListAPI(Resource):
-    def get(self, user_id):
-        user = Users.query.get(user_id)
-        if user:
-            l = []
-            for lst in user.lists:
-                l.append(lst.name)
-            return {'user_id': user_id, 'lists': l}
-        else:
-            raise NotFoundError(status_code=404)
-
 
 api.add_resource(ListAPI, "/api/lists/<user_id>", "/api/createList/<user_id>", "/api/deleteList/<list_id>", "/api/updateList/<list_id>")
 api.add_resource(CardAPI, "/api/cards/<list_id>", "/api/createCard/<list_id>", "/api/deleteCard/<card_id>", "/api/updateCard/<card_id>")
@@ -144,13 +192,13 @@ db.create_all()
 
 
 class NotFoundError(HTTPException):
-    def __init__(self,statuscode):
-        self.response = make_response('',statuscode)
+    def __init__(self,status_code):
+        self.response = make_response('',status_code)
 
 class BusinessValidationError(HTTPException):
-    def __init__(self,statuscode, errorcode, errormessage):
-        message = {"Error Code": errorcode, "Message": errormessage}
-        self.response = make_response(json.dumps(message),statuscode)
+    def __init__(self,status_code, error_code, error_message):
+        message = {"Error Code": error_code, "Message": error_message}
+        self.response = make_response(json.dumps(message),status_code)
 
 @app.route("/<username>/board/")
 def loginsuccess(username):
