@@ -4,14 +4,31 @@ from flask import Flask,flash
 from flask import render_template
 from flask import request,url_for,redirect,session,make_response
 from flask_sqlalchemy import SQLAlchemy
+from flask_restful import Resource,Api
 from datetime import datetime
 import sendmail as sm
 from werkzeug.exceptions import HTTPException
 import json
 
 current_dir = os.path.abspath(os.path.dirname(__file__))
+app = None
+api = None
 
-app = Flask(__name__)
+def create_app():
+    app = Flask(__name__, template_folder="templates")
+    app.secret_key = 'Secret Key'
+    if os.getenv('ENV', "development") == "production":
+      raise Exception("Currently no production config is setup.")
+    else:
+      print("Staring Local Development")
+      app.config.from_object(LocalDevelopmentConfig)
+    db.init_app(app)
+    api = Api(app)
+    app.app_context().push()
+    return app, api
+
+app, api = create_app()
+
 app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///"+"database.sqlite3"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 app.config['SESSION_TYPE'] = 'filesystem'
@@ -71,6 +88,7 @@ class ActiveCards(object):
     def get_active_cards(list_id):
         cards = Cards.query.filter((Cards.list_id == list_id) & (Cards.isactive==1)).all()
         return cards
+
 
 db.create_all()
 
@@ -252,6 +270,15 @@ def summary(username):
             data0.append(temp0)
         #print(labels, data1, data0)
         return render_template('summary.html', user = username, labels = json.dumps(labels), data1 = json.dumps(data1), data0 = json.dumps(data0) )        
+
+@app.route('/<username>/board/transfersCard/<listid>/<cardid>',methods=['GET','POST'])
+def transfersCard(username,listid,cardid):
+    card = Cards.query.filter_by(card_id=cardid).first()
+    tolist = request.form.getlist('totransfer')[0]
+    card.list_id = Lists.query.filter_by(listname=tolist).first().list_id
+    card.last_updated_dt=datetime.now()
+    db.session.commit()
+    return redirect(url_for('loginsuccess',username=username))  
 
 if __name__=='__main__':
     app.run(debug=True,host='0.0.0.0') 
