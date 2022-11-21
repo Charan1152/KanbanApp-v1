@@ -20,3 +20,5 @@ pip install --upgrade pip
 pip install -r requirements.txt
 # Work done. so deactivate the virtual env
 deactivate
+
+
