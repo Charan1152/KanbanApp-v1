@@ -80,19 +80,21 @@ class UsersListApi(Resource):
         data['username'] = user.username 
         data['lists'] = []
         for list in user.lists:
-            l={}
-            l['list_id'] = list.list_id
-            l['listname'] = list.listname
-            l['cards'] = []
-            for card in list.cards:
-                c={}
-                c['card_id'] = card.card_id
-                c['list_id'] = card.list_id
-                c['card_title'] = card.card_title
-                c['card_content'] = card.card_content
-                c['deadline_dt'] = str(card.deadline_dt)
-                l['cards'].append(c)
-            data['lists'].append(l)
+            if list.isactive==1:
+                l={}
+                l['list_id'] = list.list_id
+                l['listname'] = list.listname
+                l['cards'] = []
+                for card in list.cards:
+                    c={}
+                    c['card_id'] = card.card_id
+                    c['list_id'] = card.list_id
+                    c['card_title'] = card.card_title
+                    c['card_content'] = card.card_content
+                    c['deadline_dt'] = str(card.deadline_dt)
+                    c['isactive'] = card.isactive
+                    l['cards'].append(c)
+                data['lists'].append(l)
         return data   
 # class Cards(db.Model):
 #     __tablename__ = 'cards'
