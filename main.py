@@ -9,6 +9,7 @@ from datetime import datetime
 import sendmail as sm
 from werkzeug.exceptions import HTTPException
 import json
+from flask_cors import CORS,cross_origin
 
 
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -49,6 +50,8 @@ def create_app():
     app.config.update(SESSION_COOKIE_SAMESITE="None", SESSION_COOKIE_SECURE=True)
     api = Api(app)
     app.app_context().push()
+    CORS(app,supports_credentials=True)
+    app.config['CORS_HEADERS'] = 'application/json'
     return app, api
 
 app, api = create_app()
@@ -69,6 +72,40 @@ list_parser = reqparse.RequestParser()
 list_parser.add_argument('listname')
 #list_parser.add_argument('description')
 
+class UsersListApi(Resource):
+    def get(self, user_id):
+        data = {}
+        data["user_id"] = user_id
+        user = Users.query.filter_by(user_id=user_id).first()
+        data['username'] = user.username 
+        data['lists'] = []
+        for list in user.lists:
+            l={}
+            l['list_id'] = list.list_id
+            l['listname'] = list.listname
+            l['cards'] = []
+            for card in list.cards:
+                c={}
+                c['card_id'] = card.card_id
+                c['list_id'] = card.list_id
+                c['card_title'] = card.card_title
+                c['card_content'] = card.card_content
+                c['deadline_dt'] = str(card.deadline_dt)
+                l['cards'].append(c)
+            data['lists'].append(l)
+        return data   
+# class Cards(db.Model):
+#     __tablename__ = 'cards'
+#     card_id = Column(Integer,nullable=False,autoincrement=True,primary_key=True)
+#     list_id = Column(Integer,ForeignKey('lists.list_id'),nullable=False)
+#     card_title = Column(String(20),nullable=False)
+#     card_content = Column(String(50),nullable=False)
+#     deadline_dt = Column(DateTime,nullable=False)
+#     iscomplete = Column(Boolean,nullable=False)
+#     isactive = Column(Boolean,nullable=False)
+#     completed_dt = Column(DateTime,nullable=True)
+#     created_dt  = Column(DateTime,nullable=False)
+#     last_updated_dt  = Column(DateTime,nullable=False)       
 
 class ListAPI(Resource):
     def get(self, user_id):
@@ -246,6 +283,8 @@ class CardAPI(Resource):
 
 api.add_resource(ListAPI, "/api/lists/<user_id>", "/api/createList/<user_id>", "/api/deleteList/<list_id>", "/api/updateList/<list_id>")
 api.add_resource(CardAPI, "/api/cards/<list_id>", "/api/createCard/<list_id>", "/api/deleteCard/<card_id>", "/api/updateCard/<card_id>")
+api.add_resource(UsersListApi,"/api/<user_id>")
+
 
 class Users(db.Model):
     __tablename__ = 'users'
