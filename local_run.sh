@@ -17,3 +17,4 @@ fi
 export ENV=development
 python main.py
 deactivate
+
