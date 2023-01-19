@@ -56,10 +56,6 @@ def create_app():
 
 app, api = create_app()
 
-#app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:///"+"database.sqlite3"
-#app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
-#app.config['SESSION_TYPE'] = 'filesystem'
-#app.secret_key="kanbanforiitm"
 
 list_fields = {
     'list_id': fields.Integer,
