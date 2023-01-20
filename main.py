@@ -93,18 +93,6 @@ class UsersListApi(Resource):
                         l['cards'].append(c)
                 data['lists'].append(l)
         return data   
-# class Cards(db.Model):
-#     __tablename__ = 'cards'
-#     card_id = Column(Integer,nullable=False,autoincrement=True,primary_key=True)
-#     list_id = Column(Integer,ForeignKey('lists.list_id'),nullable=False)
-#     card_title = Column(String(20),nullable=False)
-#     card_content = Column(String(50),nullable=False)
-#     deadline_dt = Column(DateTime,nullable=False)
-#     iscomplete = Column(Boolean,nullable=False)
-#     isactive = Column(Boolean,nullable=False)
-#     completed_dt = Column(DateTime,nullable=True)
-#     created_dt  = Column(DateTime,nullable=False)
-#     last_updated_dt  = Column(DateTime,nullable=False)       
 
 class ListAPI(Resource):
     def get(self, user_id):
@@ -181,6 +169,7 @@ card_parser.add_argument('card_content')
 card_parser.add_argument('deadline_dt')
 card_parser.add_argument('isactive')
 card_parser.add_argument('list_id')
+card_parser.add_argument('iscomplete')
 
 class CardAPI(Resource):
     def get(self, list_id):
@@ -243,6 +232,7 @@ class CardAPI(Resource):
         deadline_dt = datetime.strptime(args.get('deadline_dt', None),'%Y-%m-%d')
         dummy = args.get('deadline_dt', None)
         list_id = args.get('list_id', None)
+        iscomplete = args.get('iscomplete',None)
 
         if list_id is None:
             raise BusinessValidationError(status_code=400, error_code='LIST003', error_message='List Id is required')
@@ -261,6 +251,9 @@ class CardAPI(Resource):
         if dummy < today:
             raise BusinessValidationError(status_code=400, error_code='CARD003', error_message='The Date must be bigger or Equal to today date')
 
+        if iscomplete is None:
+            raise BusinessValidationError(status_code=400, error_code='CARD004', error_message='Card Status required')
+
         flag = False
         c = Cards.query.filter_by(card_title=card_title,list_id=list_id).first()
         if card.list_id == list_id:
@@ -275,6 +268,12 @@ class CardAPI(Resource):
             card.card_content = card_content
             card.deadline_dt = deadline_dt
             card.isactive = True
+            if iscomplete == '1':
+                card.iscomplete = 1
+                card.completed_dt = datetime.now()
+            else:
+                card.iscomplete=0
+            card.last_updated_dt = datetime.now()
             db.session.commit()
             return card,200
         else:
