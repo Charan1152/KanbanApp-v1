@@ -254,30 +254,30 @@ class CardAPI(Resource):
         if iscomplete is None:
             raise BusinessValidationError(status_code=400, error_code='CARD004', error_message='Card Status required')
 
-        flag = False
-        c = Cards.query.filter_by(card_title=card_title,list_id=list_id).first()
-        if card.list_id == list_id:
-            if card.card_title == card_title or c == None:
-                flag = True
-        elif c == None:
-            card.list_id = list_id
-            flag = True
+        # flag = False
+        # c = Cards.query.filter_by(card_title=card_title,list_id=list_id).first()
+        # if card.list_id == list_id:
+        #     if card.card_title == card_title or c == None:
+        #         flag = True
+        # elif c == None:
+        #     card.list_id = list_id
+        #     flag = True
 
-        if flag:
-            card.card_title = card_title
-            card.card_content = card_content
-            card.deadline_dt = deadline_dt
-            card.isactive = True
-            if iscomplete == '1':
-                card.iscomplete = 1
-                card.completed_dt = datetime.now()
-            else:
-                card.iscomplete=0
-            card.last_updated_dt = datetime.now()
-            db.session.commit()
-            return card,200
+        # if flag:
+        card.card_title = card_title
+        card.card_content = card_content
+        card.deadline_dt = deadline_dt
+        card.isactive = True
+        if iscomplete == '1':
+            card.iscomplete = 1
+            card.completed_dt = datetime.now()
         else:
-            raise BusinessValidationError(status_code=400, error_code='CARD004', error_message='Card Name already exists in the given list')
+            card.iscomplete=0
+        card.last_updated_dt = datetime.now()
+        db.session.commit()
+        return card,200
+        # else:
+        #     raise BusinessValidationError(status_code=400, error_code='CARD004', error_message='Card Name already exists in the given list')
 
 api.add_resource(ListAPI, "/api/lists/<user_id>", "/api/createList/<user_id>", "/api/deleteList/<list_id>", "/api/updateList/<list_id>")
 api.add_resource(CardAPI, "/api/cards/<list_id>", "/api/createCard/<list_id>", "/api/deleteCard/<card_id>", "/api/updateCard/<card_id>")
@@ -339,184 +339,6 @@ class BusinessValidationError(HTTPException):
     def __init__(self,status_code, error_code, error_message):
         message = {"Error Code": error_code, "Message": error_message}
         self.response = make_response(json.dumps(message),status_code)
-
-@app.route("/<username>/board/")
-def loginsuccess(username):
-    lists = ActiveLists.get_active_lists(username)
-    d={}
-    for i in lists:
-        d[i] = ActiveCards.get_active_cards(i.list_id)
-    #lists = Lists.query.filter_by((Lists.uid=userrow.user_id) & (Lists.isactive=1)).all()
-    return render_template('login.html',user = username,lists=lists,length_lists=len(lists),dic=d)
-    
-
-@app.route("/",methods=['GET','POST'])
-def home():
-    if request.method=='GET':
-        return render_template('home.html')
-    if request.method=='POST':
-        uname = request.form['uname']
-        pword = request.form['pword']
-        if uname=='':
-            flash('Invalid Credentials')
-            return redirect(url_for('home'))
-        result = Users.query.filter_by(username=uname).first()
-        if result ==None:
-            flash('Invalid credentials, Try Again')
-            return redirect(url_for('home'))
-        elif result.password != pword :
-            flash('Invalid credentials, Try Again')
-            return redirect(url_for('home'))
-        else:
-            session['uname'] = uname
-            return redirect(url_for('loginsuccess',username=uname))
-
-@app.route("/<username>/logout",methods=['GET','POST'])
-def logout(username):
-    session.pop('username',None)
-    return redirect(url_for('home'))
-
-@app.route("/signUp",methods=['GET','POST'])
-def signUp():
-    if request.method=='GET':
-        return render_template('signUp.html')
-    if request.method == 'POST':
-        newuname = request.form.get('newuname')
-        newpass=request.form.get('newpass')
-        email = request.form.get('email')
-        newuser = Users(username = newuname,password = newpass,email = email)
-        quer = Users.query.filter_by(username=newuname).first()
-        if quer is  None:
-            db.session.add(newuser)
-            db.session.commit()
-            flash("User Created Successfully, Please Login now")
-            return redirect(url_for('home'))
-        else:
-            flash("User Already Exists, Please use different credentials")
-            return redirect(url_for('signUp'))
-
-@app.route('/forgotCredentials', methods=['GET','POST'])
-def forgotCredentials():
-    if request.method =='GET':
-        return render_template('forgotCred.html')
-    if request.method == 'POST':
-        email = request.form['resetmail']
-        return redirect(url_for('home',email=email))
-
-@app.route('/<username>/board/createList', methods=['GET','POST'])
-def createList(username):
-    if request.method == 'POST':
-        list_name = request.form.get("listname")
-        user = Users.query.filter_by(username=username).first()
-        newlist = Lists(uid = user.user_id,listname = list_name)
-        db.session.add(newlist)
-        db.session.commit()
-        return redirect(url_for('loginsuccess',username=username))
-
-@app.route("/<username>/board/renameList/<listid>", methods=["GET","POST"])
-def renameList(username,listid):
-    print(listid)
-    listrow = Lists.query.filter_by(list_id=listid).first()
-    listrow.listname = request.form.get("newlistname")
-    db.session.commit()
-    return redirect(url_for('loginsuccess',username=username))
-
-@app.route("/<username>/board/deleteList/<listid>",methods=['GET','POST'])
-def deleteList(username,listid):
-    user = Users.query.filter_by(username=username).first()
-    lists = user.lists
-    for i in lists:
-        if i.list_id==int(listid):
-            i.isactive=0
-            db.session.commit()
-    return redirect(url_for('loginsuccess',username=username))
-
-@app.route('/<username>/board/createCard/<listid>',methods=['GET','POST'])
-def createCard(username,listid):
-    if request.method == 'POST':
-        x = list(map(int,request.form.get("deadlinedt").split("-")))
-        card = Cards(list_id=int(listid),card_title=request.form.get("cardtitle"),card_content=request.form.get("cardcontent"),deadline_dt=datetime(x[0],x[1],x[2]),iscomplete=0,isactive=1,created_dt=datetime.now(),last_updated_dt=datetime.now())
-        db.session.add(card)
-        db.session.commit()
-        return redirect(url_for('loginsuccess',username=username))
-
-@app.route('/<username>/board/markAsComplete/<cardid>',methods=['GET','POST'])
-def markAsComplete(username,cardid):
-        card = Cards.query.filter_by(card_id=cardid).first()
-        card.iscomplete=1
-        card.last_updated_dt=datetime.now()
-        db.session.commit()
-        return redirect(url_for('loginsuccess',username=username))
-
-@app.route('/<username>/board/deleteCard/<cardid>',methods=['GET','POST'])
-def deleteCard(username,cardid):
-    card = Cards.query.filter_by(card_id=cardid).first()
-    card.isactive=0
-    db.session.commit()
-    return redirect(url_for('loginsuccess',username=username))
-
-@app.route('/<username>/board/markAsIncomplete/<cardid>',methods=['GET','POST'])
-def markAsIncomplete(username,cardid):
-        card = Cards.query.filter_by(card_id=cardid).first()
-        card.iscomplete=0
-        card.last_updated_dt=datetime.now()
-        db.session.commit()
-        return redirect(url_for('loginsuccess',username=username))
-
-@app.route('/<username>/board/renameCard/<cardid>',methods=['GET','POST'])
-def renameCard(username,cardid):
-    card = Cards.query.filter_by(card_id=cardid).first()
-    card.card_title = request.form.get('newcardname')
-    card.last_updated_dt=datetime.now()
-    db.session.commit()
-    return redirect(url_for('loginsuccess',username=username))
-
-@app.route('/<username>/board/changeCardContent/<cardid>',methods=['GET','POST'])
-def changeCardContent(username,cardid):
-    card = Cards.query.filter_by(card_id=cardid).first()
-    card.card_content = request.form.get('newcardcontent')
-    card.last_updated_dt = datetime.now()
-    db.session.commit()
-    return redirect(url_for('loginsuccess',username=username))    
-
-@app.route('/<username>/board/transferCards/<listid>',methods=['GET','POST'])
-def transferCards(username,listid):
-    cards = ActiveCards.get_active_cards(listid)
-    tolist = request.form.getlist('totransfer')[0]
-    tlist_id = Lists.query.filter_by(listname=tolist).first().list_id
-    for card in cards:
-        card.list_id  = tlist_id
-        card.last_updated_dt=datetime.now()
-    db.session.commit()
-    return redirect(url_for('loginsuccess',username=username))    
-
-@app.route('/<username>/summary')
-def summary(username):
-    if request.method == 'GET':
-        user = Users.query.filter_by(username=username).first()
-        (labels, data1, data0) = ([], [], [])
-        for l in user.lists:
-            labels.append(l.listname)
-            temp1 = 0
-            temp0 = 0
-            for card in l.cards:
-                if card.iscomplete == 1:
-                    temp1 += 1
-                else:
-                    temp0 += 1
-            data1.append(temp1)
-            data0.append(temp0)
-        #print(labels, data1, data0)
-        return render_template('summary.html', user = username, labels = json.dumps(labels), data1 = json.dumps(data1), data0 = json.dumps(data0) )        
-
-@app.route('/<username>/board/transfersCard/<listid>/<cardid>',methods=['GET','POST'])
-def transfersCard(username,listid,cardid):
-    card = Cards.query.filter_by(card_id=cardid).first()
-    tolist = request.form.getlist('totransfer')[0]
-    card.list_id = Lists.query.filter_by(listname=tolist).first().list_id
-    card.last_updated_dt=datetime.now()
-    db.session.commit()
-    return redirect(url_for('loginsuccess',username=username))  
 
 if __name__=='__main__':
     app.run(debug=True,host='0.0.0.0') 
