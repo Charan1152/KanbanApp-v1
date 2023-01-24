@@ -10,6 +10,8 @@ import sendmail as sm
 from werkzeug.exceptions import HTTPException
 import json
 from flask_cors import CORS,cross_origin
+from flask_security import *
+from flask_security import UserMixin, RoleMixin
 
 
 
@@ -20,11 +22,21 @@ class Config():
     SQLITE_DB_DIR = None
     SQLALCHEMY_DATABASE_URI = None
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    WTF_CSRF_ENABLED = False
+    SECURITY_TOKEN_AUTHENTICATION_HEADER = "Authentication-Token"
 
 class LocalDevelopmentConfig(Config):
     SQLITE_DB_DIR = os.path.join(basedir)
     SQLALCHEMY_DATABASE_URI = "sqlite:///" + os.path.join(SQLITE_DB_DIR, "database.sqlite3")
     DEBUG = True
+    SECRET_KEY =  "ash ah secet"
+    SECURITY_PASSWORD_HASH = "bcrypt"    
+    SECURITY_PASSWORD_SALT = "really super secret" # Read from ENV in your case
+    SECURITY_REGISTERABLE = True
+    SECURITY_CONFIRMABLE = False
+    SECURITY_SEND_REGISTER_EMAIL = False
+    SECURITY_UNAUTHORIZED_VIEW = None
+    WTF_CSRF_ENABLED = False
 
 
 db = SQLAlchemy()
@@ -35,6 +47,46 @@ ForeignKey = db.ForeignKey
 Boolean = db.Boolean
 DateTime = db.DateTime
 
+class Users(db.Model,UserMixin):
+    __tablename__ = 'user'
+    user_id = Column(Integer,primary_key = True,autoincrement=True)
+    id = user_id
+    username = Column(String, unique=True,nullable=False)
+    password = Column(String,nullable=False)
+    email = Column(String, nullable=False)
+    isactive = Column(Boolean,nullable=False)
+    fs_uniquifier = Column(String,nullable=False,unique=True)
+    active = Column(Boolean)
+    lists = db.relationship('Lists',backref = 'Users')
+    
+class Lists(db.Model):
+    __tablename__ = 'lists'
+    list_id = Column(Integer,nullable=False,autoincrement=True,primary_key=True)
+    uid = Column(Integer,ForeignKey('user.user_id'),nullable=False )
+    listname = Column(String(30),nullable=False)
+    isactive = Column(Boolean,default=True)
+    cards = db.relationship('Cards',backref = 'Lists')
+
+class Cards(db.Model):
+    __tablename__ = 'cards'
+    card_id = Column(Integer,nullable=False,autoincrement=True,primary_key=True)
+    list_id = Column(Integer,ForeignKey('lists.list_id'),nullable=False)
+    card_title = Column(String(20),nullable=False)
+    card_content = Column(String(50),nullable=False)
+    deadline_dt = Column(DateTime,nullable=False)
+    iscomplete = Column(Boolean,nullable=False)
+    isactive = Column(Boolean,nullable=False)
+    completed_dt = Column(DateTime,nullable=True)
+    created_dt  = Column(DateTime,nullable=False)
+    last_updated_dt  = Column(DateTime,nullable=False)
+
+class Role(db.Model,RoleMixin):
+    __tablename__ = 'role'
+    id = Column(Integer,primary_key=True)
+    name = Column(String, unique=True)
+    description = Column(String)
+
+   
 current_dir = os.path.abspath(os.path.dirname(__file__))
 app = None
 api = None
@@ -53,6 +105,8 @@ def create_app():
     app.app_context().push()
     CORS(app,supports_credentials=True)
     app.config['CORS_HEADERS'] = 'application/json'
+    user_datastore = SQLAlchemySessionUserDatastore(db.session, Users, Role)
+    security = Security(app, user_datastore)
     return app, api
 
 app, api = create_app()
@@ -269,36 +323,16 @@ api.add_resource(CardAPI, "/api/cards/<list_id>", "/api/createCard/<list_id>", "
 api.add_resource(UsersListApi,"/api/<user_id>")
 
 
-class Users(db.Model):
-    __tablename__ = 'users'
-    user_id = Column(Integer,primary_key = True,autoincrement=True)
-    username = Column(String, unique=True,nullable=False)
-    password = Column(String,nullable=False)
-    email = Column(String, nullable=False)
-    isactive = Column(Boolean,nullable=False,default=True)
-    lists = db.relationship('Lists',backref = 'Users')
+# class Users(db.Model):
+#     __tablename__ = 'users'
+#     user_id = Column(Integer,primary_key = True,autoincrement=True)
+#     username = Column(String, unique=True,nullable=False)
+#     password = Column(String,nullable=False)
+#     email = Column(String, nullable=False)
+#     isactive = Column(Boolean,nullable=False,default=True)
+#     lists = db.relationship('Lists',backref = 'Users')
 
-class Lists(db.Model):
-    __tablename__ = 'lists'
-    list_id = Column(Integer,nullable=False,autoincrement=True,primary_key=True)
-    uid = Column(Integer,ForeignKey('users.user_id'),nullable=False )
-    listname = Column(String(30),nullable=False)
-    isactive = Column(Boolean,default=True)
-    cards = db.relationship('Cards',backref = 'Lists')
 
-class Cards(db.Model):
-    __tablename__ = 'cards'
-    card_id = Column(Integer,nullable=False,autoincrement=True,primary_key=True)
-    list_id = Column(Integer,ForeignKey('lists.list_id'),nullable=False)
-    card_title = Column(String(20),nullable=False)
-    card_content = Column(String(50),nullable=False)
-    deadline_dt = Column(DateTime,nullable=False)
-    iscomplete = Column(Boolean,nullable=False)
-    isactive = Column(Boolean,nullable=False)
-    completed_dt = Column(DateTime,nullable=True)
-    created_dt  = Column(DateTime,nullable=False)
-    last_updated_dt  = Column(DateTime,nullable=False)
-   
 class ActiveLists(object):
     @staticmethod
     def get_active_lists(username):
