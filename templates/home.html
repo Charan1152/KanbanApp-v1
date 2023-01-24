@@ -17,7 +17,7 @@
               width:750px;
               padding: 15px;
               margin: auto;
-              background-image:linear-gradient(to left,black,springgreen);
+              background-image:linear-gradient(to left,black,#243748);
               border-radius: 12px;
 
             }
@@ -61,7 +61,7 @@
             }
             .btn-grad:hover {
                 background-position: right center; /* change the direction of the change here */
-                color: gold;
+                color: green;
                 text-decoration: none;
                 cursor: pointer;
             }
@@ -89,7 +89,7 @@
             <source src="{{ url_for('static', filename='Untitled design.mp4') }}" type="video/mp4">
             Your browser does not support HTML5 video.
           </video>*/-->
-        <h1 align="center" style="color:whitesmoke;border: 2px solid gold;border-radius: 50%;">KanbanApp - Where Excellence Meets Workflow</h1>
+        <h1 align="center" style="color:whitesmoke;border: 2px solid gold;border-radius: 20%;">KanbanApp - Where Excellence Meets Workflow</h1>
         <div class="card">
             <form method="post" action="/">
                 {% with messages = get_flashed_messages() %}
