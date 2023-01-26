@@ -23,7 +23,7 @@ class Config():
     SQLALCHEMY_DATABASE_URI = None
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     WTF_CSRF_ENABLED = False
-    SECURITY_TOKEN_AUTHENTICATION_HEADER = "Authentication-Token"
+    SECURITY_TOKEN_AUTHENTICATION_HEADER = "Authentication-token"
 
 class LocalDevelopmentConfig(Config):
     SQLITE_DB_DIR = os.path.join(basedir)
@@ -31,7 +31,7 @@ class LocalDevelopmentConfig(Config):
     DEBUG = True
     SECRET_KEY =  "ash ah secet"
     SECURITY_PASSWORD_HASH = "bcrypt"    
-    SECURITY_PASSWORD_SALT = "really super secret" # Read from ENV in your case
+    SECURITY_PASSWORD_SALT = "really super secret"
     SECURITY_REGISTERABLE = True
     SECURITY_CONFIRMABLE = False
     SECURITY_SEND_REGISTER_EMAIL = False
@@ -180,6 +180,7 @@ class ListAPI(Resource):
         db.session.add(l)
         db.session.commit()
         return l, 201
+
     @auth_required("token")
     def delete(self, list_id):
         l = Lists.query.get(list_id)
@@ -223,12 +224,12 @@ card_fields = {
 }
 
 card_parser = reqparse.RequestParser()
-card_parser.add_argument('card_title')
-card_parser.add_argument('card_content')
-card_parser.add_argument('deadline_dt')
-card_parser.add_argument('isactive')
-card_parser.add_argument('list_id')
-card_parser.add_argument('iscomplete')
+card_parser.add_argument('card_title',type=str)
+card_parser.add_argument('card_content',type=str)
+card_parser.add_argument('deadline_dt',type=str)
+# card_parser.add_argument('isactive')
+card_parser.add_argument('list_id',type=str)
+# card_parser.add_argument('iscomplete',type=str)
 
 class CardAPI(Resource):
     @auth_required("token")
@@ -241,9 +242,9 @@ class CardAPI(Resource):
             return {'list_id': list_id, 'cards': c}
         else:
             raise NotFoundError(status_code=404)
-    
-    @marshal_with(card_fields)
+
     @auth_required("token")
+    @marshal_with(card_fields)
     def post(self, list_id):
         args = card_parser.parse_args()
         card_title = args.get('card_title', None)
@@ -252,22 +253,21 @@ class CardAPI(Resource):
         dummy = args.get('deadline_dt', None)
         created_dt = datetime.now()
         ludt = datetime.now()
-
         if card_title is None:
             raise BusinessValidationError(status_code=400, error_code='CARD001', error_message='Card Name is required')
-
         if deadline_dt is None:
             raise BusinessValidationError(status_code=400, error_code='CARD002', error_message='Deadline is required')
 
         today = datetime.today().strftime('%Y-%m-%d')
         if dummy < today:
             raise BusinessValidationError(status_code=400, error_code='CARD003', error_message='Date must be bigger or Equal to today date')
-
+       
         card = Cards.query.filter_by(card_title=card_title,list_id=list_id).first()
         if card is not None:
             raise BusinessValidationError(status_code=400, error_code='CARD004', error_message='Card Name already exists in the given list')
-        
+   
         c = Cards(card_title=card_title, card_content=card_content, deadline_dt=deadline_dt, created_dt=created_dt ,list_id=list_id,last_updated_dt=ludt,iscomplete=False,completed_dt=None,isactive=True)
+        
         db.session.add(c)
         db.session.commit()
         return c, 201
@@ -326,9 +326,32 @@ class CardAPI(Resource):
         db.session.commit()
         return card,200
 
+
+card_parser_x = reqparse.RequestParser()
+card_parser_x.add_argument('iscomplete',type=str)
+
+class CardOps(Resource):
+    # @auth_required("token")
+    @marshal_with(card_fields)
+    def post(self,card_id):
+        print(1)
+        args = card_parser_x.parse_args()
+        iscomplete = args.get('iscomplete',None)
+
+        card = Cards.query.get(card_id).first()
+        if iscomplete == '1':
+            card.iscomplete = 1
+            card.completed_dt = datetime.now()
+        else:
+            card.iscomplete=0
+        card.last_updated_dt = datetime.now()
+        db.session.commit()
+        return card,200
+
 api.add_resource(ListAPI, "/api/lists/<user_id>", "/api/createList/<user_id>", "/api/deleteList/<list_id>", "/api/updateList/<list_id>")
 api.add_resource(CardAPI, "/api/cards/<list_id>", "/api/createCard/<list_id>", "/api/deleteCard/<card_id>", "/api/updateCard/<card_id>")
 api.add_resource(UsersListApi,"/api/<user_id>")
+api.add_resource(CardOps,"/api/markCom/<card_id>")
 
 
 # class Users(db.Model):
