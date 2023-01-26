@@ -6,12 +6,12 @@ from flask import request,url_for,redirect,session,make_response
 from flask_sqlalchemy import SQLAlchemy
 from flask_restful import Resource,Api,marshal_with,reqparse,fields
 from datetime import datetime
-import sendmail as sm
+# import sendmail as sm
 from werkzeug.exceptions import HTTPException
 import json
 from flask_cors import CORS,cross_origin
 from flask_security import *
-from flask_security import UserMixin, RoleMixin
+from flask_security import UserMixin, RoleMixin,auth_required
 
 
 
@@ -123,7 +123,9 @@ list_parser = reqparse.RequestParser()
 list_parser.add_argument('listname')
 #list_parser.add_argument('description')
 
+
 class UsersListApi(Resource):
+    # @auth_required("token")
     def get(self, user_id):
         data = {}
         data["user_id"] = user_id
@@ -150,6 +152,7 @@ class UsersListApi(Resource):
         return data   
 
 class ListAPI(Resource):
+    @auth_required("token")
     def get(self, user_id):
         user = Users.query.get(user_id)
         if user:
@@ -162,6 +165,7 @@ class ListAPI(Resource):
 
 
     @marshal_with(list_fields)
+    @auth_required("token")
     def post(self, user_id):
         args = list_parser.parse_args()
         listname = args.get('listname', None)
@@ -176,7 +180,7 @@ class ListAPI(Resource):
         db.session.add(l)
         db.session.commit()
         return l, 201
-
+    @auth_required("token")
     def delete(self, list_id):
         l = Lists.query.get(list_id)
         if l is None:
@@ -186,7 +190,7 @@ class ListAPI(Resource):
             db.session.commit()
             return "Successfully Deleted" 
 
-
+    @auth_required("token")
     @marshal_with(list_fields)
     def put(self, list_id):
         l = Lists.query.get(list_id)
@@ -227,6 +231,7 @@ card_parser.add_argument('list_id')
 card_parser.add_argument('iscomplete')
 
 class CardAPI(Resource):
+    @auth_required("token")
     def get(self, list_id):
         l = Lists.query.get(list_id)
         if l:
@@ -238,6 +243,7 @@ class CardAPI(Resource):
             raise NotFoundError(status_code=404)
     
     @marshal_with(card_fields)
+    @auth_required("token")
     def post(self, list_id):
         args = card_parser.parse_args()
         card_title = args.get('card_title', None)
@@ -265,7 +271,8 @@ class CardAPI(Resource):
         db.session.add(c)
         db.session.commit()
         return c, 201
-        
+
+    @auth_required("token")
     def delete(self, card_id):
         card = Cards.query.get(card_id)
         if card is None:
@@ -275,6 +282,7 @@ class CardAPI(Resource):
             db.session.commit()
             return "Successfully Deleted"
 
+    @auth_required("token")
     @marshal_with(card_fields)
     def put(self, card_id):
         card = Cards.query.get(card_id)
