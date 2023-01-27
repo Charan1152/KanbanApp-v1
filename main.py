@@ -11,7 +11,8 @@ from werkzeug.exceptions import HTTPException
 import json
 from flask_cors import CORS,cross_origin
 from flask_security import *
-from flask_security import UserMixin, RoleMixin,auth_required
+# from flask_security import UserMixin, RoleMixin,auth_required
+import string, random
 
 
 
@@ -50,10 +51,10 @@ DateTime = db.DateTime
 class Users(db.Model,UserMixin):
     __tablename__ = 'user'
     user_id = Column(Integer,primary_key = True,autoincrement=True)
-    id = user_id
-    username = Column(String, unique=True,nullable=False)
+    id = Column(Integer)
+    username = Column(String,nullable=False)
     password = Column(String,nullable=False)
-    email = Column(String, nullable=False)
+    email = Column(String, nullable=False,unique=True)
     isactive = Column(Boolean,nullable=False)
     fs_uniquifier = Column(String,nullable=False,unique=True)
     active = Column(Boolean)
@@ -123,9 +124,19 @@ list_parser = reqparse.RequestParser()
 list_parser.add_argument('listname')
 #list_parser.add_argument('description')
 
+user_fields = {
+    'username': fields.String,
+    'password': fields.String,
+    'email': fields.String
+}
+
+user_parser  = reqparse.RequestParser()
+user_parser.add_argument("username")
+user_parser.add_argument("password")
+user_parser.add_argument("email")
 
 class UsersListApi(Resource):
-    # @auth_required("token")
+    @auth_required("token")
     def get(self, user_id):
         data = {}
         data["user_id"] = user_id
@@ -147,9 +158,29 @@ class UsersListApi(Resource):
                         c['card_content'] = card.card_content
                         c['deadline_dt'] = str(card.deadline_dt)
                         c['isactive'] = card.isactive
+                        c['iscomplete'] = card.iscomplete
                         l['cards'].append(c)
                 data['lists'].append(l)
         return data   
+    
+    @marshal_with(user_fields)
+    def post(self):   
+        args = user_parser.parse_args()
+        newuname = args.get('username', None)
+        password = args.get('password',None)
+        email = args.get('email',None)
+        fs_uniquifier = ''.join(random.choices(string.ascii_letters,k=10))
+        newuser = Users(username = newuname,password = password,email = email,fs_uniquifier=fs_uniquifier,isactive=True,active=True)
+        quer = Users.query.filter_by(email=email).first()
+        if quer is  None:
+            db.session.add(newuser)
+            db.session.commit()
+            user = Users.query.filter_by(email=email).first()
+            user.id = user.user_id
+            db.session.commit()
+        else:
+            raise BusinessValidationError(status_code=400,error_code="User001",error_message="User Already Exist")
+        return quer, 201
 
 class ListAPI(Resource):
     @auth_required("token")
@@ -243,7 +274,7 @@ class CardAPI(Resource):
         else:
             raise NotFoundError(status_code=404)
 
-    @auth_required("token")
+    # @auth_required("token")
     @marshal_with(card_fields)
     def post(self, list_id):
         args = card_parser.parse_args()
@@ -272,7 +303,7 @@ class CardAPI(Resource):
         db.session.commit()
         return c, 201
 
-    @auth_required("token")
+    # @auth_required("token")
     def delete(self, card_id):
         card = Cards.query.get(card_id)
         if card is None:
@@ -328,29 +359,28 @@ class CardAPI(Resource):
 
 
 card_parser_x = reqparse.RequestParser()
-card_parser_x.add_argument('iscomplete',type=str)
+card_parser_x.add_argument('iscomplete',type=int)
 
 class CardOps(Resource):
-    # @auth_required("token")
+    @auth_required("token")
     @marshal_with(card_fields)
     def post(self,card_id):
-        print(1)
         args = card_parser_x.parse_args()
         iscomplete = args.get('iscomplete',None)
-
-        card = Cards.query.get(card_id).first()
-        if iscomplete == '1':
+        card = Cards.query.get(card_id)
+        if iscomplete == 1:
             card.iscomplete = 1
             card.completed_dt = datetime.now()
         else:
             card.iscomplete=0
         card.last_updated_dt = datetime.now()
+
         db.session.commit()
         return card,200
 
 api.add_resource(ListAPI, "/api/lists/<user_id>", "/api/createList/<user_id>", "/api/deleteList/<list_id>", "/api/updateList/<list_id>")
 api.add_resource(CardAPI, "/api/cards/<list_id>", "/api/createCard/<list_id>", "/api/deleteCard/<card_id>", "/api/updateCard/<card_id>")
-api.add_resource(UsersListApi,"/api/<user_id>")
+api.add_resource(UsersListApi,"/api/<user_id>","/api/signUp")
 api.add_resource(CardOps,"/api/markCom/<card_id>")
 
 
