@@ -3,3 +3,7 @@ Flask-SQLAlchemy==2.5.1
 flask-restful
 flask-security-too
 flask-cors
+redis
+email_validator
+bcrypt
+celery[redis]

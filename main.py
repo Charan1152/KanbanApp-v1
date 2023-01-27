@@ -13,85 +13,17 @@ from flask_cors import CORS,cross_origin
 from flask_security import *
 # from flask_security import UserMixin, RoleMixin,auth_required
 import string, random
+from application import workers
+from application import config
+from application.config import LocalDevelopmentConfig
+from application import tasks
+from application.models import Users, Lists, Cards, Role 
+from application.database import db
 
-
-
-basedir = os.path.abspath(os.path.dirname(__file__))
-
-class Config():
-    DEBUG = False
-    SQLITE_DB_DIR = None
-    SQLALCHEMY_DATABASE_URI = None
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
-    WTF_CSRF_ENABLED = False
-    SECURITY_TOKEN_AUTHENTICATION_HEADER = "Authentication-token"
-
-class LocalDevelopmentConfig(Config):
-    SQLITE_DB_DIR = os.path.join(basedir)
-    SQLALCHEMY_DATABASE_URI = "sqlite:///" + os.path.join(SQLITE_DB_DIR, "database.sqlite3")
-    DEBUG = True
-    SECRET_KEY =  "ash ah secet"
-    SECURITY_PASSWORD_HASH = "bcrypt"    
-    SECURITY_PASSWORD_SALT = "really super secret"
-    SECURITY_REGISTERABLE = True
-    SECURITY_CONFIRMABLE = False
-    SECURITY_SEND_REGISTER_EMAIL = False
-    SECURITY_UNAUTHORIZED_VIEW = None
-    WTF_CSRF_ENABLED = False
-
-
-db = SQLAlchemy()
-Column = db.Column
-Integer = db.Integer
-String = db.String
-ForeignKey = db.ForeignKey
-Boolean = db.Boolean
-DateTime = db.DateTime
-
-class Users(db.Model,UserMixin):
-    __tablename__ = 'user'
-    user_id = Column(Integer,primary_key = True,autoincrement=True)
-    id = Column(Integer)
-    username = Column(String,nullable=False)
-    password = Column(String,nullable=False)
-    email = Column(String, nullable=False,unique=True)
-    isactive = Column(Boolean,nullable=False)
-    fs_uniquifier = Column(String,nullable=False,unique=True)
-    active = Column(Boolean)
-    lists = db.relationship('Lists',backref = 'Users')
-    
-class Lists(db.Model):
-    __tablename__ = 'lists'
-    list_id = Column(Integer,nullable=False,autoincrement=True,primary_key=True)
-    uid = Column(Integer,ForeignKey('user.user_id'),nullable=False )
-    listname = Column(String(30),nullable=False)
-    isactive = Column(Boolean,default=True)
-    cards = db.relationship('Cards',backref = 'Lists')
-
-class Cards(db.Model):
-    __tablename__ = 'cards'
-    card_id = Column(Integer,nullable=False,autoincrement=True,primary_key=True)
-    list_id = Column(Integer,ForeignKey('lists.list_id'),nullable=False)
-    card_title = Column(String(20),nullable=False)
-    card_content = Column(String(50),nullable=False)
-    deadline_dt = Column(DateTime,nullable=False)
-    iscomplete = Column(Boolean,nullable=False)
-    isactive = Column(Boolean,nullable=False)
-    completed_dt = Column(DateTime,nullable=True)
-    created_dt  = Column(DateTime,nullable=False)
-    last_updated_dt  = Column(DateTime,nullable=False)
-
-class Role(db.Model,RoleMixin):
-    __tablename__ = 'role'
-    id = Column(Integer,primary_key=True)
-    name = Column(String, unique=True)
-    description = Column(String)
-
-   
 current_dir = os.path.abspath(os.path.dirname(__file__))
 app = None
 api = None
-
+celery = None
 def create_app():
     app = Flask(__name__, template_folder="templates")
     app.secret_key = "kanbanforiitm"
@@ -102,15 +34,27 @@ def create_app():
       app.config.from_object(LocalDevelopmentConfig)
     db.init_app(app)
     app.config.update(SESSION_COOKIE_SAMESITE="None", SESSION_COOKIE_SECURE=True)
-    api = Api(app)
-    app.app_context().push()
     CORS(app,supports_credentials=True)
     app.config['CORS_HEADERS'] = 'application/json'
     user_datastore = SQLAlchemySessionUserDatastore(db.session, Users, Role)
     security = Security(app, user_datastore)
-    return app, api
+    api = Api(app)
+    app.app_context().push()
+    
+    # Create celery   
+    celery = workers.celery
 
-app, api = create_app()
+    # Update with configuration
+    celery.conf.update(
+        broker_url = app.config["CELERY_BROKER_URL"],
+        result_backend = app.config["CELERY_RESULT_BACKEND"]
+    )
+
+    celery.Task = workers.ContextTask
+    app.app_context().push()
+    return app, api, celery
+
+app, api, celery = create_app()
 
 
 list_fields = {
@@ -137,10 +81,12 @@ user_parser.add_argument("email")
 
 class UsersListApi(Resource):
     @auth_required("token")
-    def get(self, user_id):
+    def get(self, email):
         data = {}
-        data["user_id"] = user_id
-        user = Users.query.filter_by(user_id=user_id).first()
+        data["email"] = email
+        print()
+        user = Users.query.filter_by(email=email).first()
+        print(user)
         data['username'] = user.username 
         data['lists'] = []
         for list in user.lists:
@@ -316,44 +262,40 @@ class CardAPI(Resource):
     @auth_required("token")
     @marshal_with(card_fields)
     def put(self, card_id):
+        print(1)
         card = Cards.query.get(card_id)
         if card is None:
             raise NotFoundError(status_code=404)
-
+        print(2)
         args = card_parser.parse_args()
+        print(args)
         card_title = args.get('card_title', None)
         card_content = args.get('card_content', None)
         deadline_dt = datetime.strptime(args.get('deadline_dt', None),'%Y-%m-%d')
-        dummy = args.get('deadline_dt', None)
         list_id = args.get('list_id', None)
-        iscomplete = args.get('iscomplete',None)
-
+        
+        print(3)
         if list_id is None:
             raise BusinessValidationError(status_code=400, error_code='LIST003', error_message='List Id is required')
 
-        l = Lists.query.get(list_id)
-        if l is None:
-            raise NotFoundError(status_code=404)
-
+        # l = Lists.query.get(list_id)
+        # if l is None:
+        #     raise NotFoundError(status_code=404)
+        print(4)
         if card_title is None:
             raise BusinessValidationError(status_code=400, error_code='CARD001', error_message='Card Name is required')
-        
+        print(5)
         if deadline_dt is None:
             raise BusinessValidationError(status_code=400, error_code='CARD002', error_message='Deadline is required')
-
-        if iscomplete is None:
-            raise BusinessValidationError(status_code=400, error_code='CARD003', error_message='Card Status required')
-
+        print(6)
+        print(card)
         card.card_title = card_title
         card.card_content = card_content
         card.deadline_dt = deadline_dt
         card.isactive = True
-        if iscomplete == '1':
-            card.iscomplete = 1
-            card.completed_dt = datetime.now()
-        else:
-            card.iscomplete=0
+        card.list_id = list_id
         card.last_updated_dt = datetime.now()
+        print(7)
         db.session.commit()
         return card,200
 
@@ -378,9 +320,14 @@ class CardOps(Resource):
         db.session.commit()
         return card,200
 
+# @app.route("/export",methods=["GET", "POST"])
+# def export():
+#     job = tasks.print_current_time_job.delay()
+#     return str(job), 200
+
 api.add_resource(ListAPI, "/api/lists/<user_id>", "/api/createList/<user_id>", "/api/deleteList/<list_id>", "/api/updateList/<list_id>")
 api.add_resource(CardAPI, "/api/cards/<list_id>", "/api/createCard/<list_id>", "/api/deleteCard/<card_id>", "/api/updateCard/<card_id>")
-api.add_resource(UsersListApi,"/api/<user_id>","/api/signUp")
+api.add_resource(UsersListApi,"/api/<email>","/api/signUp")
 api.add_resource(CardOps,"/api/markCom/<card_id>")
 
 
